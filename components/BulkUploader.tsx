@@ -6,7 +6,8 @@ import {
   ArrowPathIcon, 
   DocumentIcon,
   CheckCircleIcon,
-  ExclamationCircleIcon
+  ExclamationCircleIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline';
 import BulkUploadProgress, { UploadFile } from './BulkUploadProgress';
 import FolderSelector from './FolderSelector';
@@ -28,9 +29,15 @@ interface BulkUploaderProps {
   onComplete: () => void;
   onCancel: () => void;
   onProgressUpdate?: (totalFiles: number, overallProgress: number) => void;
+  onUploadStart?: () => void;
 }
 
-export default function BulkUploader({ onComplete, onCancel, onProgressUpdate }: BulkUploaderProps) {
+export default function BulkUploader({ 
+  onComplete, 
+  onCancel, 
+  onProgressUpdate,
+  onUploadStart
+}: BulkUploaderProps) {
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [selectedFolder, setSelectedFolder] = useState('');
   const [isUploading, setIsUploading] = useState(false);
@@ -687,34 +694,52 @@ export default function BulkUploader({ onComplete, onCancel, onProgressUpdate }:
   );
 
   return (
-    <div className="w-full space-y-4 relative">
+    <div className="w-full space-y-5 relative">
       {/* Toast container for notifications */}
-      <Toaster position="top-right" />
+      <Toaster position="top-right" toastOptions={{
+        style: {
+          background: '#ffffff',
+          color: '#4a4536',
+          borderRadius: '0.5rem',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+          border: '1px solid #e6e4d9',
+        },
+        success: {
+          iconTheme: {
+            primary: '#5d7a67',
+            secondary: '#ffffff',
+          },
+        },
+        error: {
+          iconTheme: {
+            primary: '#b17d5d',
+            secondary: '#ffffff',
+          },
+        },
+      }} />
       
       {/* Upload history toggle button */}
       <div className="absolute top-0 right-0">
         <button
           type="button"
           onClick={() => setShowHistory(!showHistory)}
-          className="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600"
+          className="p-1.5 rounded-full bg-earth-100 hover:bg-earth-200 text-earth-600 transition-colors"
           title="Upload History"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <ClockIcon className="h-5 w-5" />
         </button>
       </div>
       
       {/* Upload history panel */}
       {showHistory && (
-        <div className="absolute right-0 top-10 z-10 w-80 shadow-xl">
+        <div className="absolute right-0 top-10 z-10 w-80 shadow-medium rounded-xl overflow-hidden bg-white border border-earth-100">
           <UploadHistoryPanel />
         </div>
       )}
       
       <div className="form-control w-full">
-        <label className="label">
-          <span className="label-text font-medium">Destination Folder</span>
+        <label className="block text-sm font-medium text-earth-700 mb-1">
+          Destination Folder
         </label>
         <FolderSelector 
           selectedFolder={selectedFolder} 
@@ -725,8 +750,8 @@ export default function BulkUploader({ onComplete, onCancel, onProgressUpdate }:
       
       {!isUploading && (
         <div 
-          className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
-            dragActive ? 'border-primary bg-primary/5' : 'border-gray-300'
+          className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
+            dragActive ? 'border-sage-400 bg-sage-50' : 'border-earth-200'
           }`}
           onDragEnter={handleDrag}
           onDragOver={handleDrag}
@@ -742,10 +767,10 @@ export default function BulkUploader({ onComplete, onCancel, onProgressUpdate }:
             disabled={isUploading}
           />
           
-          <div className="flex flex-col items-center justify-center py-4">
-            <div className="mb-3 bg-gray-100 rounded-full p-3">
+          <div className="flex flex-col items-center justify-center py-6">
+            <div className="mb-4 bg-earth-100 rounded-full p-4">
               <svg 
-                className="w-6 h-6 text-gray-500" 
+                className="w-8 h-8 text-earth-600" 
                 aria-hidden="true" 
                 xmlns="http://www.w3.org/2000/svg" 
                 fill="none" 
@@ -754,17 +779,17 @@ export default function BulkUploader({ onComplete, onCancel, onProgressUpdate }:
                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
               </svg>
             </div>
-            <p className="mb-2 text-sm text-gray-700">
-              <span className="font-semibold">Click to upload</span> or drag and drop
+            <p className="mb-2 text-sm text-earth-700">
+              <span className="font-medium">Click to upload</span> or drag and drop
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-earth-500">
               Any file types (Max size: 200MB per file)
             </p>
           </div>
           
           <button 
             type="button"
-            className="btn btn-sm btn-outline mt-2"
+            className="mt-4 px-4 py-2 bg-sage-500 hover:bg-sage-600 text-white rounded-lg text-sm font-medium transition-colors"
             onClick={() => fileInputRef.current?.click()}
           >
             Select Files
@@ -773,7 +798,7 @@ export default function BulkUploader({ onComplete, onCancel, onProgressUpdate }:
       )}
       
       {files.length > 0 && (
-        <div className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-xl border border-earth-100 overflow-hidden shadow-soft">
           <BulkUploadProgress 
             files={files} 
             onCancel={!isUploading ? cancelUpload : undefined}
@@ -782,11 +807,11 @@ export default function BulkUploader({ onComplete, onCancel, onProgressUpdate }:
         </div>
       )}
       
-      <div className="flex justify-end space-x-2 mt-4">
+      <div className="flex justify-end space-x-3 mt-6">
         {!isUploading && files.length > 0 && (
           <button 
             type="button" 
-            className="btn btn-sm btn-primary"
+            className="px-4 py-2 bg-sage-500 hover:bg-sage-600 text-white rounded-lg text-sm font-medium transition-colors"
             onClick={startUpload}
           >
             Upload {files.length} {files.length === 1 ? 'File' : 'Files'}
@@ -795,15 +820,11 @@ export default function BulkUploader({ onComplete, onCancel, onProgressUpdate }:
         
         <button 
           type="button" 
-          className="btn btn-sm btn-ghost"
+          className="px-4 py-2 bg-earth-100 hover:bg-earth-200 text-earth-700 rounded-lg text-sm font-medium transition-colors"
           onClick={cancelAllUploads}
         >
           {isUploading ? 'Cancel Upload' : 'Cancel'}
         </button>
-      </div>
-      
-      <div className="mt-4 text-center">
-        <UploadDebugInfo />
       </div>
     </div>
   );

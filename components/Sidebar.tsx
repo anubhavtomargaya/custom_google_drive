@@ -212,7 +212,7 @@ const ClientSidebar = ({ initialFileStructure }: ClientSidebarProps) => {
   return (
     <div className="w-64 bg-base-200 h-screen flex flex-col">
       <div className="p-4">
-        <h1 className="text-xl font-bold mb-4">Dustabej</h1>
+        <h1 className="text-xl font-bold mb-4">dastavez</h1>
         <div className="form-control mb-2">
           <input
             type="text"
@@ -255,7 +255,7 @@ const ClientSidebar = ({ initialFileStructure }: ClientSidebarProps) => {
           </div>
           <div className="flex flex-col">
             <span className="font-medium">Parteek Sharma</span>
-            <span className="text-xs opacity-70">parteek@dustabej.com</span>
+            <span className="text-xs opacity-70">parteek@dastavez.com</span>
           </div>
         </div>
       </div>

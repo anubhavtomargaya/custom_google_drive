@@ -7,9 +7,15 @@ interface FloatingUploadPanelProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: () => void;
+  onUploadStart?: () => void;
 }
 
-export default function FloatingUploadPanel({ isOpen, onClose, onComplete }: FloatingUploadPanelProps) {
+export default function FloatingUploadPanel({ 
+  isOpen, 
+  onClose, 
+  onComplete,
+  onUploadStart 
+}: FloatingUploadPanelProps) {
   const [isMinimized, setIsMinimized] = useState(false);
   const [uploadCount, setUploadCount] = useState(0);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -31,11 +37,11 @@ export default function FloatingUploadPanel({ isOpen, onClose, onComplete }: Flo
   
   if (isMinimized) {
     return (
-      <div className="fixed bottom-4 right-4 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-        <div className="p-3 flex items-center justify-between bg-primary text-white rounded-t-lg">
+      <div className="fixed bottom-4 right-4 w-64 bg-white rounded-xl shadow-soft border border-earth-100 z-50 overflow-hidden transition-all duration-300 ease-in-out">
+        <div className="p-3 flex items-center justify-between bg-sage-500 text-white">
           <div className="flex items-center space-x-2">
-            <span className="font-medium">Uploading Files</span>
-            <div className="badge badge-white">{uploadCount}</div>
+            <span className="font-medium text-sm">Uploading Files</span>
+            <div className="px-1.5 py-0.5 bg-white/20 rounded-full text-xs">{uploadCount}</div>
           </div>
           <div className="flex items-center space-x-1">
             {uploadProgress === 100 && (
@@ -44,7 +50,7 @@ export default function FloatingUploadPanel({ isOpen, onClose, onComplete }: Flo
                   onComplete();
                   toast.success('Files refreshed!');
                 }}
-                className="p-1 hover:bg-primary-focus rounded"
+                className="p-1 hover:bg-sage-600 rounded transition-colors"
                 title="Refresh folder view"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -54,27 +60,27 @@ export default function FloatingUploadPanel({ isOpen, onClose, onComplete }: Flo
             )}
             <button 
               onClick={() => setIsMinimized(false)}
-              className="p-1 hover:bg-primary-focus rounded"
+              className="p-1 hover:bg-sage-600 rounded transition-colors"
             >
               <ArrowsPointingOutIcon className="h-4 w-4" />
             </button>
           </div>
         </div>
         <div className="p-3">
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-earth-100 rounded-full h-1.5">
             <div 
-              className="bg-primary h-2 rounded-full" 
+              className="bg-gradient-to-r from-sage-400 to-sage-500 h-1.5 rounded-full transition-all duration-300 ease-in-out" 
               style={{ width: `${uploadProgress}%` }}
             ></div>
           </div>
-          <div className="text-xs text-right mt-1 text-gray-500">
+          <div className="text-xs text-right mt-1 text-earth-500">
             {uploadProgress}% Complete
           </div>
           <div className="text-xs text-center mt-2">
             {uploadProgress === 100 ? (
-              <span className="text-green-500">Upload complete!</span>
+              <span className="text-sage-600">Upload complete!</span>
             ) : (
-              <span>Uploading large files may take time...</span>
+              <span className="text-earth-500">Uploading files...</span>
             )}
           </div>
         </div>
@@ -83,30 +89,33 @@ export default function FloatingUploadPanel({ isOpen, onClose, onComplete }: Flo
   }
   
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-        <div className="p-4 border-b flex items-center justify-between bg-primary text-white rounded-t-lg">
-          <h3 className="font-bold text-lg">Bulk Upload Files</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-earth-900/20 backdrop-blur-sm">
+      <div className="bg-white rounded-xl shadow-medium border border-earth-100 w-full max-w-2xl max-h-[90vh] overflow-hidden">
+        <div className="flex items-center justify-between p-4 border-b border-earth-100">
+          <h2 className="text-lg font-medium text-earth-800">Upload Files</h2>
           <div className="flex items-center space-x-2">
-            <button 
+            <button
               onClick={() => setIsMinimized(true)}
-              className="p-1 hover:bg-primary-focus rounded"
+              className="p-1.5 rounded-lg hover:bg-earth-100 text-earth-500 transition-colors"
+              title="Minimize"
             >
               <ArrowsPointingInIcon className="h-5 w-5" />
             </button>
-            <button 
+            <button
               onClick={onClose}
-              className="p-1 hover:bg-primary-focus rounded"
+              className="p-1.5 rounded-lg hover:bg-earth-100 text-earth-500 transition-colors"
+              title="Close"
             >
               <XMarkIcon className="h-5 w-5" />
             </button>
           </div>
         </div>
-        <div className="p-4 overflow-y-auto flex-grow">
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-4rem)]">
           <BulkUploader 
-            onComplete={onComplete}
+            onComplete={onComplete} 
             onCancel={onClose}
             onProgressUpdate={handleProgressUpdate}
+            onUploadStart={onUploadStart}
           />
         </div>
       </div>

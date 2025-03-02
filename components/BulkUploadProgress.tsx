@@ -46,18 +46,18 @@ export default function BulkUploadProgress({ files, onCancel, onComplete }: Bulk
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending':
-        return <ClockIcon className="h-4 w-4 text-gray-400" />;
+        return <ClockIcon className="h-4 w-4 text-earth-400" />;
       case 'uploading':
         return (
-          <svg className="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <svg className="animate-spin h-4 w-4 text-sage-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
         );
       case 'success':
-        return <CheckCircleIcon className="h-4 w-4 text-green-500" />;
+        return <CheckCircleIcon className="h-4 w-4 text-sage-500" />;
       case 'error':
-        return <XCircleIcon className="h-4 w-4 text-red-500" />;
+        return <XCircleIcon className="h-4 w-4 text-clay-500" />;
       default:
         return null;
     }
@@ -72,37 +72,37 @@ export default function BulkUploadProgress({ files, onCancel, onComplete }: Bulk
   };
 
   return (
-    <div className="divide-y divide-gray-200 w-full">
+    <div className="divide-y divide-earth-100 w-full">
       {/* Overall progress */}
-      <div className="p-3">
-        <div className="flex justify-between mb-1 items-center">
-          <span className="text-sm font-medium text-gray-700">Overall Progress</span>
-          <span className="text-sm font-medium text-gray-700">{overallProgress}%</span>
+      <div className="p-4">
+        <div className="flex justify-between mb-2 items-center">
+          <span className="text-sm font-medium text-earth-700">Overall Progress</span>
+          <span className="text-sm font-medium text-earth-700">{overallProgress}%</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-earth-100 rounded-full h-2">
           <div 
-            className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-300 ease-in-out" 
+            className="bg-gradient-to-r from-sage-400 to-sage-500 h-2 rounded-full transition-all duration-300 ease-in-out" 
             style={{ width: `${overallProgress}%` }}
           ></div>
         </div>
       </div>
       
       {/* Individual file progress */}
-      <div className="max-h-60 overflow-y-auto divide-y divide-gray-100">
+      <div className="max-h-60 overflow-y-auto divide-y divide-earth-100">
         {files.map((file) => (
-          <div key={file.id} className="p-3 hover:bg-gray-50 transition-colors">
-            <div className="flex items-center mb-1">
-              <div className="mr-2">
+          <div key={file.id} className="p-3 hover:bg-earth-50 transition-colors">
+            <div className="flex items-center mb-1.5">
+              <div className="mr-2 flex-shrink-0">
                 {getStatusIcon(file.status)}
               </div>
-              <div className="flex-1 truncate pr-2 text-sm">{file.file.name}</div>
-              <div className="text-xs text-gray-500 mr-2">
+              <div className="flex-1 truncate pr-2 text-sm text-earth-700">{file.file.name}</div>
+              <div className="text-xs text-earth-500 mr-2 flex-shrink-0">
                 {formatFileSize(file.file.size)}
               </div>
               {file.status !== 'success' && onCancel && (
                 <button 
                   onClick={() => onCancel(file.id)}
-                  className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+                  className="p-1 rounded-full hover:bg-earth-200 text-earth-500 transition-colors flex-shrink-0"
                   title="Cancel upload"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -112,21 +112,21 @@ export default function BulkUploadProgress({ files, onCancel, onComplete }: Bulk
               )}
             </div>
             
-            <div className="w-full bg-gray-200 rounded-full h-1.5">
+            <div className="w-full bg-earth-100 rounded-full h-1.5">
               <div 
                 className={`h-1.5 rounded-full transition-all duration-300 ${
                   file.status === 'error' 
-                    ? 'bg-red-500' 
+                    ? 'bg-clay-500' 
                     : file.status === 'success' 
-                      ? 'bg-green-500' 
-                      : 'bg-blue-500'
+                      ? 'bg-sage-500' 
+                      : 'bg-sage-400'
                 }`}
                 style={{ width: `${file.progress}%` }}
               ></div>
             </div>
             
             {file.error && (
-              <div className="text-xs text-red-500 mt-1">
+              <div className="text-xs text-clay-600 mt-1.5 bg-clay-50 p-1.5 rounded">
                 Error: {file.error}
               </div>
             )}

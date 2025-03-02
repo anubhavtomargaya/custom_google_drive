@@ -91,6 +91,8 @@ export default function Home() {
   const [selectedUploadFolder, setSelectedUploadFolder] = useState('');
   const [isBulkUploadVisible, setIsBulkUploadVisible] = useState(false);
   const [isPollingActive, setIsPollingActive] = useState(false);
+  const [sortColumn, setSortColumn] = useState<string>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Update useEffect to fetch data when path changes
   useEffect(() => {
@@ -540,309 +542,342 @@ export default function Home() {
     return () => clearInterval(pollInterval);
   }, [isPollingActive]);
 
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      // Toggle direction if clicking the same column
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new column and default to ascending
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const renderSortIcon = (column: string) => {
+    if (sortColumn !== column) {
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-earth-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+      );
+    }
+    
+    return sortDirection === 'asc' ? (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-sage-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+      </svg>
+    ) : (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-sage-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    );
+  };
+
+  const handlePathChange = (path: string) => {
+    // Update the current path state
+    setCurrentPath(path);
+    
+    // Update the URL query parameter
+    const url = new URL(window.location.href);
+    if (path) {
+      url.searchParams.set('path', path);
+    } else {
+      url.searchParams.delete('path');
+    }
+    window.history.pushState({}, '', url);
+    
+    // If fileStructure is available, update the displayed items
+    if (fileStructure) {
+      updateCurrentItems(fileStructure, path);
+    }
+  };
+
   return (
-    <div className="flex h-screen bg-base-100">
+    <div className="flex h-screen bg-earth-50">
       <div className="flex-1 p-2 sm:p-6 flex flex-col">
         {/* Header section */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <div className="flex items-center space-x-2 w-full sm:w-auto">
-            <div className="breadcrumbs text-base-content text-sm sm:text-base">
-              <ul>
-                {getBreadcrumbs().map((crumb, index) => (
-                  <li key={index}>
-                    <Link 
-                      href={`/?path=${crumb.path}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentPath(crumb.path);
-                        const url = new URL(window.location.href);
-                        url.searchParams.set('path', crumb.path);
-                        window.history.pushState({}, '', url);
-                      }}
-                    >
-                      {crumb.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-            <div className="relative flex-1 sm:flex-none">
+          <h1 className="text-2xl font-medium text-earth-800">File Manager</h1>
+          
+          <div className="flex items-center space-x-3">
+            <div className="relative">
               <input
-                type="search"
-                placeholder="Search Your Files"
-                className="input input-bordered w-full sm:w-64 bg-base-200 text-base-content"
+                type="text"
+                placeholder="Search files..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 bg-white border border-earth-200 rounded-lg text-sm text-earth-700 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all"
               />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-earth-400">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
             </div>
-            <div className="flex space-x-2">
-              <button 
-                className="btn btn-primary btn-outline"
-                onClick={() => setIsUploadModalOpen(true)}
-              >
-                <FaUpload className="mr-2" /> Upload
-              </button>
-              <button 
-                className="btn btn-primary"
-                onClick={() => setIsBulkUploadVisible(true)}
-              >
-                <FaUpload className="mr-2" /> Bulk Upload
-              </button>
-            </div>
+            
+            <button
+              onClick={() => {
+                setSelectedUploadFolder(currentPath);
+                setIsBulkUploadVisible(true);
+              }}
+              className="flex items-center space-x-2 px-4 py-2 bg-sage-500 hover:bg-sage-600 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <span>Upload</span>
+            </button>
           </div>
         </div>
-
-        {/* Upload Modal */}
-        <dialog id="upload_modal" className={`modal ${isUploadModalOpen ? 'modal-open' : ''}`}>
-          <div className="modal-box">
-            <h3 className="font-bold text-lg mb-4">Upload File</h3>
-            <form onSubmit={handleUpload} className="space-y-4">
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Destination Folder</span>
-                </label>
-                <FolderSelector 
-                  selectedFolder={selectedUploadFolder} 
-                  onFolderSelect={setSelectedUploadFolder} 
-                />
+        
+        {/* Breadcrumb navigation */}
+        <div className="flex items-center space-x-2 mb-4 text-sm overflow-x-auto pb-2">
+          <button
+            onClick={() => handlePathChange('')}
+            className={`px-2 py-1 rounded ${currentPath === '' ? 'bg-sage-100 text-sage-700' : 'text-earth-600 hover:bg-earth-100'} transition-colors`}
+          >
+            Home
+          </button>
+          
+          {/* Render breadcrumb segments */}
+          {currentPath !== '' && currentPath.split('/').map((segment, index, array) => {
+            const path = array.slice(0, index + 1).join('/');
+            return (
+              <div key={path} className="flex items-center">
+                <span className="text-earth-400 mx-1">/</span>
+                <button
+                  onClick={() => handlePathChange(path)}
+                  className={`px-2 py-1 rounded ${
+                    index === array.length - 1 
+                      ? 'bg-sage-100 text-sage-700' 
+                      : 'text-earth-600 hover:bg-earth-100'
+                  } transition-colors`}
+                >
+                  {segment}
+                </button>
               </div>
-
-              <div className="form-control w-full">
-                <label className="label">
-                  <span className="label-text">HTTP URL</span>
-                </label>
-                <input 
-                  type="url"
-                  name="httpUrl"
-                  placeholder="Enter HTTP URL to transfer" 
-                  className="input input-bordered w-full" 
-                />
-                <label className="label">
-                  <span className="label-text-alt">OR</span>
-                </label>
-              </div>
-
-              <div className="form-control w-full">
-                <label className="label">
-                  <span className="label-text">Upload File</span>
-                </label>
-                <input 
-                  type="file" 
-                  className="file-input file-input-bordered w-full" 
-                />
-              </div>
-
-              <div className="modal-action">
+            );
+          })}
+        </div>
+        
+        {/* File and folder listing */}
+        <div className="bg-white rounded-xl border border-earth-100 shadow-soft flex-1 overflow-hidden">
+          {/* Table header */}
+          <div className="border-b border-earth-100">
+            <div className="grid grid-cols-12 gap-4 px-4 py-3 text-sm font-medium text-earth-700">
+              <div className="col-span-6 flex items-center">
                 <button 
-                  type="submit" 
-                  className="btn btn-primary"
-                  disabled={isUploading}
+                  onClick={() => handleSort('name')}
+                  className="flex items-center space-x-1 hover:text-sage-600 transition-colors"
                 >
-                  {isUploading ? 'Processing...' : 'Upload'}
-                </button>
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={() => setIsUploadModalOpen(false)}
-                  disabled={isUploading}
-                >
-                  Cancel
+                  <span>Name</span>
+                  {renderSortIcon('name')}
                 </button>
               </div>
-            </form>
-          </div>
-          <form method="dialog" className="modal-backdrop">
-            <button onClick={() => setIsUploadModalOpen(false)}>close</button>
-          </form>
-        </dialog>
-
-        {/* Floating Upload Panel */}
-        <FloatingUploadPanel
-          isOpen={isBulkUploadVisible}
-          onClose={() => {
-            setIsBulkUploadVisible(false);
-            setIsPollingActive(false);
-          }}
-          onComplete={() => {
-            refreshFileStructure();
-            setIsBulkUploadVisible(false);
-            setIsPollingActive(false);
-          }}
-          onUploadStart={() => {
-            setIsPollingActive(true);
-          }}
-        />
-
-        {/* Table with vertical scroll */}
-        <div className="flex-1 overflow-hidden flex flex-col bg-base-200 rounded-lg">
-          <div className="overflow-y-auto flex-1">
-            <table className="table w-full">
-              {/* Sticky Header */}
-              <thead className="sticky top-0 z-10">
-                <tr className="text-base-content">
-                  <th 
-                    className="bg-base-300 cursor-pointer hover:bg-base-200"
-                    onClick={() => requestSort('name')}
-                  >
-                    <div className="flex items-center">
-                      NAME
-                      {getSortIcon('name')}
-                    </div>
-                  </th>
-                  <th 
-                    className="bg-base-300 hidden sm:table-cell cursor-pointer hover:bg-base-200"
-                    onClick={() => requestSort('size')}
-                  >
-                    <div className="flex items-center">
-                      SIZE
-                      {getSortIcon('size')}
-                    </div>
-                  </th>
-                  <th 
-                    className="bg-base-300 hidden md:table-cell cursor-pointer hover:bg-base-200"
-                    onClick={() => requestSort('updated')}
-                  >
-                    <div className="flex items-center">
-                      LAST CHANGED
-                      {getSortIcon('updated')}
-                    </div>
-                  </th>
-                  <th className="bg-base-300">ACTIONS</th>
-                </tr>
-              </thead>
-              {/* Table body */}
-              <tbody>
-                {currentItems.map((item, index) => (
-                  <tr key={index} className="hover:bg-base-300">
-                    <td className="flex items-center">
-                      <div 
-                        onClick={() => handleItemClick(item)}
-                        className="flex items-center hover:cursor-pointer"
-                      >
-                        {getFileIcon(item.name, item.type === 'folder')}
-                        <span className="ml-2 text-base-content truncate max-w-[150px] sm:max-w-[300px]">
-                          {item.name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="text-base-content hidden sm:table-cell">
-                      {item.size || '-'}
-                    </td>
-                    <td className="text-base-content hidden md:table-cell">
-                      {item.updated || '-'}
-                    </td>
-                    <td className="w-[120px] sm:w-[200px]">
-                      <div className="flex gap-1 sm:gap-2">
-                        {['video', 'image', 'pdf', 'audio'].includes(getFileType(item.name)) && (
-                          <button 
-                            className="btn btn-ghost btn-sm text-base-content"
-                            onClick={() => handleFilePreview(
-                              item,
-                              currentPath,
-                              (url, type) => setPreviewModal({
-                                isOpen: true,
-                                url,
-                                type,
-                                fileName: item.name
-                              })
-                            )}
-                          >
-                            <FaPlay className="h-4 w-4 sm:h-5 sm:w-5" />
-                          </button>
-                        )}
-                        <button 
-                          className="btn btn-ghost btn-sm text-base-content"
-                          onClick={() => handleDownload(item as typeof folders[0])}
-                        >
-                          <FaDownload className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </button>
-                        <button className="btn btn-ghost btn-sm text-base-content">
-                          <FaCopy className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </button>
-                        <button 
-                          className="btn btn-ghost btn-sm text-error"
-                          onClick={() => handleDelete(item)}
-                        >
-                          <FaTrash className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Sticky Pagination */}
-          <div className="sticky bottom-0 bg-base-200 p-4 border-t border-base-300">
-            <div className="flex justify-center flex-wrap gap-2">
-              <button
-                className="btn btn-sm"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  className={`btn btn-sm ${currentPage === page ? 'btn-primary' : ''}`}
-                  onClick={() => handlePageChange(page)}
+              <div className="col-span-2 flex items-center">
+                <button 
+                  onClick={() => handleSort('size')}
+                  className="flex items-center space-x-1 hover:text-sage-600 transition-colors"
                 >
-                  {page}
+                  <span>Size</span>
+                  {renderSortIcon('size')}
                 </button>
-              ))}
-              <button
-                className="btn btn-sm"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </button>
+              </div>
+              <div className="col-span-3 flex items-center">
+                <button 
+                  onClick={() => handleSort('updated')}
+                  className="flex items-center space-x-1 hover:text-sage-600 transition-colors"
+                >
+                  <span>Last Modified</span>
+                  {renderSortIcon('updated')}
+                </button>
+              </div>
+              <div className="col-span-1 text-right">Actions</div>
             </div>
+          </div>
+          
+          {/* File and folder items */}
+          <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 16rem)' }}>
+            {currentItems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-earth-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-lg font-medium mb-1">This folder is empty</p>
+                <p className="text-sm">Upload files or create folders to get started</p>
+              </div>
+            ) : (
+              currentItems.map((item, index) => (
+                <div 
+                  key={index} 
+                  className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-earth-100 hover:bg-earth-50 transition-colors"
+                >
+                  <div className="col-span-6 flex items-center">
+                    <div 
+                      onClick={() => handleItemClick(item)}
+                      className="flex items-center cursor-pointer"
+                    >
+                      {item.type === 'folder' ? (
+                        <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-sage-100 text-sage-600 mr-3">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                          </svg>
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-earth-100 text-earth-600 mr-3">
+                          {getFileIcon(item.name)}
+                        </div>
+                      )}
+                      <span className="text-sm text-earth-800 truncate">{item.name}</span>
+                    </div>
+                  </div>
+                  <div className="col-span-2 flex items-center text-sm text-earth-600">
+                    {item.size || '-'}
+                  </div>
+                  <div className="col-span-3 flex items-center text-sm text-earth-600">
+                    {item.updated || '-'}
+                  </div>
+                  <div className="col-span-1 flex items-center justify-end space-x-1">
+                    {item.type === 'file' && (
+                      <>
+                        <button
+                          onClick={() => handleDownload(item)}
+                          className="p-1.5 rounded-lg hover:bg-earth-100 text-earth-500 transition-colors"
+                          title="Download"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handlePreview(item)}
+                          className="p-1.5 rounded-lg hover:bg-earth-100 text-earth-500 transition-colors"
+                          title="Preview"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={() => handleDelete(item)}
+                      className="p-1.5 rounded-lg hover:bg-clay-100 text-clay-500 transition-colors"
+                      title="Delete"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+        
+        {/* Pagination */}
+        <div className="flex justify-between items-center mt-4">
+          <div className="text-sm text-earth-600">
+            Showing {Math.min((currentPage - 1) * itemsPerPage + 1, currentItems.length)} to {Math.min(currentPage * itemsPerPage, currentItems.length)} of {currentItems.length} items
+          </div>
+          <div className="flex space-x-1">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 rounded-lg bg-white border border-earth-200 text-earth-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              disabled={currentPage * itemsPerPage >= currentItems.length}
+              className="px-3 py-1 rounded-lg bg-white border border-earth-200 text-earth-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
           </div>
         </div>
       </div>
-
-      <FilePreviewSidebar
-        file={selectedFile?.metadata || null}
-        onClose={() => setSelectedFile(null)}
+      
+      {/* Upload panel */}
+      <FloatingUploadPanel
+        isOpen={isBulkUploadVisible}
+        onClose={() => {
+          setIsBulkUploadVisible(false);
+          setIsPollingActive(false);
+        }}
+        onComplete={() => {
+          refreshFileStructure();
+          setIsBulkUploadVisible(false);
+          setIsPollingActive(false);
+        }}
+        onUploadStart={() => {
+          setIsPollingActive(true);
+        }}
       />
       
-      <FileModal />
-
-      {/* Upload Progress Toast */}
-      {isUploading && (
-        <div className="toast toast-end">
-          <div className="alert alert-info">
-            <div>
-              <span>Uploading...</span>
-              <progress 
-                className="progress progress-info w-56" 
-                value={uploadProgress} 
-                max="100"
-              ></progress>
-              <span>{uploadProgress}%</span>
-            </div>
+      {/* Preview modal */}
+      <dialog id="preview_modal" className={`modal ${previewModal.isOpen ? 'modal-open' : ''}`}>
+        <div className="modal-box max-w-4xl bg-white p-0 rounded-xl overflow-hidden">
+          <div className="p-4 border-b border-earth-100 flex justify-between items-center">
+            <h3 className="font-medium text-earth-800 truncate">{previewModal.fileName}</h3>
+            <button 
+              onClick={() => setPreviewModal({
+                isOpen: false,
+                url: '',
+                type: '',
+                fileName: ''
+              })}
+              className="p-1.5 rounded-lg hover:bg-earth-100 text-earth-500 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="p-6">
+            {previewModal.type === 'image' && (
+              <img 
+                src={previewModal.url} 
+                alt={previewModal.fileName} 
+                className="max-w-full max-h-[70vh] mx-auto rounded-lg"
+              />
+            )}
+            {previewModal.type === 'video' && (
+              <video controls className="w-full max-h-[70vh]">
+                <source src={previewModal.url} />
+                Your browser does not support the video tag.
+              </video>
+            )}
+            {previewModal.type === 'pdf' && (
+              <iframe 
+                src={previewModal.url} 
+                className="w-full h-[70vh]" 
+                title={previewModal.fileName}
+              />
+            )}
+            {previewModal.type === 'audio' && (
+              <audio controls className="w-full">
+                <source src={previewModal.url} />
+                Your browser does not support the audio tag.
+              </audio>
+            )}
           </div>
         </div>
-      )}
-
-      <PreviewModal 
-        previewModal={previewModal} 
-        setPreviewModal={setPreviewModal} 
-      />
-
-      {/* Debug output */}
-      <div className="text-xs text-gray-500 mt-2">
-        Selected folder: {selectedUploadFolder || '(root)'}
-      </div>
+        <form method="dialog" className="modal-backdrop">
+          <button onClick={() => setPreviewModal({
+            isOpen: false,
+            url: '',
+            type: '',
+            fileName: ''
+          })}>close</button>
+        </form>
+      </dialog>
     </div>
   );
 }
-
 // Update the PreviewModal component definition
 const PreviewModal = ({ 
   previewModal, 
@@ -852,33 +887,41 @@ const PreviewModal = ({
   setPreviewModal: React.Dispatch<React.SetStateAction<{ isOpen: boolean; url: string; type: string; fileName: string; }>>;
 }) => (
   <dialog id="preview_modal" className={`modal ${previewModal.isOpen ? 'modal-open' : ''}`}>
-    <div className="modal-box max-w-4xl h-auto">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="font-bold text-lg truncate">{previewModal.fileName}</h3>
+    <div className="modal-box max-w-4xl bg-white p-0 rounded-xl overflow-hidden">
+      <div className="p-4 border-b border-earth-100 flex justify-between items-center">
+        <h3 className="font-medium text-earth-800 truncate">{previewModal.fileName}</h3>
         <button 
-          className="btn btn-sm btn-circle btn-ghost"
           onClick={() => setPreviewModal({
             isOpen: false,
             url: '',
             type: '',
             fileName: ''
           })}
-        >✕</button>
+          className="p-1.5 rounded-lg hover:bg-earth-100 text-earth-500 transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
-      <div className="mt-4">
+      <div className="p-6">
+        {previewModal.type === 'image' && (
+          <img 
+            src={previewModal.url} 
+            alt={previewModal.fileName} 
+            className="max-w-full max-h-[70vh] mx-auto rounded-lg"
+          />
+        )}
         {previewModal.type === 'video' && (
-          <video controls className="w-full">
+          <video controls className="w-full max-h-[70vh]">
             <source src={previewModal.url} />
             Your browser does not support the video tag.
           </video>
         )}
-        {previewModal.type === 'image' && (
-          <img src={previewModal.url} alt={previewModal.fileName} className="w-full" />
-        )}
         {previewModal.type === 'pdf' && (
-          <iframe
-            src={previewModal.url}
-            className="w-full h-[70vh]"
+          <iframe 
+            src={previewModal.url} 
+            className="w-full h-[70vh]" 
             title={previewModal.fileName}
           />
         )}

@@ -1,26 +1,25 @@
-import type { Metadata } from "next";
-import { Geist } from "next/font/google";
-import "./globals.css";
+import './globals.css'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
 import ThemeToggler from "@/components/ThemeToggler";
 import { FileStructureLoader } from '@/components/FileStructureLoader';
 import Sidebar from '@/components/Sidebar';
-const geist = Geist({
-  subsets: ["latin"],
-});
+
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: "Filey - Personal File Manager",
-  description: "Manage your personal files easily",
-};
+  title: 'File Manager',
+  description: 'A modern, minimal file management system',
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="en">
-      <body className={`${geist.className} antialiased`}>
+      <body className={`${inter.className} bg-earth-50 text-earth-900`}>
         <div className="flex h-screen">
           <FileStructureLoader />
           <main className="flex-1 p-0 overflow-x-hidden relative">
@@ -32,5 +31,5 @@ export default function RootLayout({
         </div>
       </body>
     </html>
-  );
+  )
 }
